@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.example.bmihaylov.rcremotecontrol.MainActivity"
+    tools:showIn="@layout/activity_accelerometer_mode">
+
+    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="56dp"
+    android:padding="5dp"
+    android:stretchColumns="1,2,3"
+    android:layout_above="@+id/state_text"
+    tools:context=".AccelerometerMode">
+
+        <!--<TableRow-->
+        <!--android:id="@+id/tableRow1"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content">-->
+
+            <!--<TextView-->
+            <!--android:id="@+id/textViewX"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_width="1dp"-->
+            <!--android:gravity="center"-->
+            <!--android:layout_column="1"-->
+            <!--android:text="X"/>-->
+
+            <!--<TextView-->
+            <!--android:id="@+id/textViewY"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_width="1dp"-->
+            <!--android:gravity="center"-->
+            <!--android:layout_column="2"-->
+            <!--android:text="Y"/>-->
+
+            <!--<TextView-->
+            <!--android:id="@+id/textViewZ"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_width="1dp"-->
+            <!--android:gravity="center"-->
+            <!--android:layout_column="3"-->
+            <!--android:text="Z"/>-->
+
+        <!--</TableRow>-->
+
+    </TableLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_above="@+id/state_text"
+        android:textColor="#000"
+        android:textSize="42dp"
+        android:text="STATE"
+        android:id="@+id/state"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:textSize="30dp"
+        android:text="STAY"
+        android:id="@+id/state_text"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18dp"
+        android:text="Distance: "
+        android:id="@+id/distance"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/distance"
+        android:textSize="18dp"
+        android:text="208 cm"
+        android:id="@+id/distance_text"/>
+
+    <Button
+        android:layout_height="38dp"
+        android:layout_width="38dp"
+        android:background="@drawable/lightbulb"
+        android:layout_below="@+id/distance"
+        android:id="@+id/light_bt"/>
+
+    <Button
+        android:layout_height="34dp"
+        android:layout_width="34dp"
+        android:background="@drawable/ic_baterry"
+        android:layout_alignParentRight="true"
+        android:id="@+id/baterry_level" />
+
+    <Button
+        android:layout_height="34dp"
+        android:layout_width="34dp"
+        android:background="@drawable/ic_bluetooth1"
+        android:layout_toLeftOf="@+id/baterry_level"
+        android:id="@+id/bluetooth_bt" />
+
+    <Button
+        android:layout_height="34dp"
+        android:layout_width="34dp"
+        android:background="@drawable/bt_normal_mode"
+        android:layout_toLeftOf="@+id/bluetooth_bt"
+        android:id="@+id/normal_mode_bt" />
+
+</RelativeLayout>
