@@ -4,8 +4,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -205,7 +203,7 @@ public class AccelerometerMode extends AppCompatActivity {
             fragmentTransaction.commit();
         }
         else if(id == R.id.paired_devices) {
-            PairedDevicesFragment fragment = new PairedDevicesFragment();
+            BluetoothDevicesFragment fragment = new BluetoothDevicesFragment();
             android.support.v4.app.FragmentTransaction fragmentTransaction =
                     getSupportFragmentManager().beginTransaction();
             fragmentTransaction.replace(R.id.fragment_container,fragment);
