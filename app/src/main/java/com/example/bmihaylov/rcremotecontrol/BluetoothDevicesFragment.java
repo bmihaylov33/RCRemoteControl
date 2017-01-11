@@ -8,14 +8,11 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Looper;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,12 +23,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-
-import static android.R.id.message;
 
 
 /**
@@ -40,6 +32,14 @@ import static android.R.id.message;
 public class BluetoothDevicesFragment extends DialogFragment {
 
     private final static UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
+    public static BluetoothSocket bluetoothSocket;
+    BluetoothAdapter myBluetooth = null;
+    private ArrayAdapter adapter;
+    private ListView listView;
+    private static final int ENABLE_BT_REQUEST_CODE = 1;
+    private static final int DISCOVERABLE_BT_REQUEST_CODE = 2;
+    private static final int DISCOVERABLE_DURATION = 300;
 
     // Create a BroadcastReceiver for ACTION_FOUND
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -57,15 +57,6 @@ public class BluetoothDevicesFragment extends DialogFragment {
             }
         }
     };
-
-    BluetoothAdapter myBluetooth = null;
-    public BluetoothSocket bluetoothSocket;
-    private ArrayAdapter adapter;
-    private ListView listView;
-    public static boolean isBtConnected = false;
-    private static final int ENABLE_BT_REQUEST_CODE = 1;
-    private static final int DISCOVERABLE_BT_REQUEST_CODE = 2;
-    private static final int DISCOVERABLE_DURATION = 300;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -149,7 +140,7 @@ public class BluetoothDevicesFragment extends DialogFragment {
     }
 
     protected void discoverDevices(){
-        Log.d("discoverdevices", "in");
+        Log.d("discover devices", "in");
 
         // To scan for remote Bluetooth devices
         if (myBluetooth.startDiscovery()) {
@@ -186,7 +177,7 @@ public class BluetoothDevicesFragment extends DialogFragment {
     private class ListeningThread extends Thread {
         private final BluetoothServerSocket bluetoothServerSocket;
 
-        public ListeningThread() {
+        private ListeningThread() {
             BluetoothServerSocket temp = null;
             try {
                 temp = myBluetooth.listenUsingRfcommWithServiceRecord(getString(R.string.app_name), uuid);
@@ -252,10 +243,10 @@ public class BluetoothDevicesFragment extends DialogFragment {
 
             // Get a BluetoothSocket to connect with the given BluetoothDevice
             try {
-                temp = bluetoothDevice.createRfcommSocketToServiceRecord(bluetoothDevice.getUuids()[0].getUuid());
+                temp = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(bluetoothDevice.getUuids()[0].getUuid());
             } catch (IOException e) {
                 try {
-                    temp = device.createRfcommSocketToServiceRecord(uuid);
+                    temp = device.createInsecureRfcommSocketToServiceRecord(uuid);
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
