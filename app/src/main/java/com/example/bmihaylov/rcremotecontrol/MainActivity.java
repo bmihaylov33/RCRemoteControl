@@ -26,8 +26,6 @@ import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
-    private BluetoothDevicesFragment bluetoothDevicesFragment;
-
     TextView state_text;
     TextView distance_text;
     Button left_bt;
@@ -256,21 +254,11 @@ public class MainActivity extends AppCompatActivity {
             FragmentManager fm = getSupportFragmentManager();
             SettingsFragment editNameDialog = new SettingsFragment();
             editNameDialog.show(fm, "fragment_settings");
-//            SettingsFragment fragment = new SettingsFragment();
-//            android.support.v4.app.FragmentTransaction fragmentTransaction =
-//                    getSupportFragmentManager().beginTransaction();
-//            fragmentTransaction.replace(R.id.fragment_container,fragment);
-//            fragmentTransaction.commit();
         }
         else if(id == R.id.paired_devices) {
             FragmentManager fm = getSupportFragmentManager();
             BluetoothDevicesFragment editNameDialog = new BluetoothDevicesFragment();
             editNameDialog.show(fm, "fragment_bluetooth_devices");
-//            BluetoothDevicesFragment fragment = new BluetoothDevicesFragment();
-//            android.support.v4.app.FragmentTransaction fragmentTransaction =
-//                    getSupportFragmentManager().beginTransaction();
-//            fragmentTransaction.replace(R.id.fragment_container,fragment);
-//            fragmentTransaction.commit();
         }
         else if(id == R.id.control) {
             FragmentManager fm = getSupportFragmentManager();
@@ -292,123 +280,4 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-    public void setBluetoothDevicesFragment(BluetoothDevicesFragment bluetoothDevicesFragment) {
-        this.bluetoothDevicesFragment = bluetoothDevicesFragment;
-    }
-
-//    private class ListeningThread extends Thread {
-//        private final BluetoothServerSocket bluetoothServerSocket;
-//
-//        public ListeningThread() {
-//            BluetoothServerSocket temp = null;
-//            try {
-//                temp = myBluetooth.listenUsingRfcommWithServiceRecord(getString(R.string.app_name), uuid);
-//
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            bluetoothServerSocket = temp;
-//        }
-//
-//        public void run() {
-//            BluetoothSocket bluetoothSocket;
-//            // This will block while listening until a BluetoothSocket is returned
-//            // or an exception occurs
-//            while (true) {
-//                try {
-//                    bluetoothSocket = bluetoothServerSocket.accept();
-//                } catch (IOException e) {
-//                    break;
-//                }
-//                // If a connection is accepted
-//                if (bluetoothSocket != null) {
-//
-//                    runOnUiThread(new Runnable() {
-//                        public void run() {
-//                            Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_SHORT).show();
-//                        }
-//                    });
-//
-//                    // Code to manage the connection in a separate thread
-//                   /*
-//                       manageBluetoothConnection(bluetoothSocket);
-//                   */
-//
-//                    try {
-//                        bluetoothServerSocket.close();
-//                        //isBtConnected = false;
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                    break;
-//                }
-//            }
-//        }
-//
-//        // Cancel the listening socket and terminate the thread
-//        public void cancel() {
-//            try {
-//                bluetoothServerSocket.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
-//
-//    public class ConnectThread extends Thread {
-//
-//        private final BluetoothSocket bluetoothSocket;
-//        private final BluetoothDevice bluetoothDevice;
-//
-//        public ConnectThread(BluetoothDevice device) {
-//
-//            BluetoothSocket temp = null;
-//            bluetoothDevice = device;
-//
-//            // Get a BluetoothSocket to connect with the given BluetoothDevice
-//            try {
-//                temp = bluetoothDevice.createRfcommSocketToServiceRecord(bluetoothDevice.getUuids()[0].getUuid());
-//            } catch (IOException e) {
-//                try {
-//                    temp = device.createRfcommSocketToServiceRecord(uuid);
-//                } catch (IOException e1) {
-//                    e1.printStackTrace();
-//                }
-//            }
-//            bluetoothSocket = temp;
-//        }
-//
-//        public void run() {
-//            // Cancel any discovery as it will slow down the connection
-////        myBluetooth.cancelDiscovery();
-//
-//            try {
-//                // This will block until it succeeds in connecting to the device
-//                // through the bluetoothSocket or throws an exception
-//                bluetoothSocket.connect();
-//            } catch (IOException connectException) {
-//                connectException.printStackTrace();
-//                try {
-//                    bluetoothSocket.close();
-//                } catch (IOException closeException) {
-//                    closeException.printStackTrace();
-//                }
-//            }
-//
-//            // Code to manage the connection in a separate thread
-//        /*
-//            manageBluetoothConnection(bluetoothSocket);
-//        */
-//        }
-//
-//        // Cancel an open connection and terminate the thread
-//        public void cancel() {
-//            try {
-//                bluetoothSocket.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
 }

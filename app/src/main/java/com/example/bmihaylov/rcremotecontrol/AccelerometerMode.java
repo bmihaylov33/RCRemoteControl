@@ -4,8 +4,10 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,6 +18,8 @@ import android.hardware.SensorManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.IOException;
 
 public class AccelerometerMode extends AppCompatActivity {
 
@@ -30,7 +34,7 @@ public class AccelerometerMode extends AppCompatActivity {
 //    private TextView textViewZ;
 
     private SensorManager sensorManager;
-    private BluetoothAdapter BA;
+    private BluetoothAdapter myBluetooth = null;
     //    private Set<BluetoothDevice> pairedDevices;
     boolean isClicked = true; //shows if bluetooth button is clicked
 
@@ -51,9 +55,9 @@ public class AccelerometerMode extends AppCompatActivity {
 //        textViewY = (TextView) findViewById(R.id.textViewY);
 //        textViewZ = (TextView) findViewById(R.id.textViewZ);
 
-        BA = BluetoothAdapter.getDefaultAdapter();
+        myBluetooth = BluetoothAdapter.getDefaultAdapter();
 
-        if(!BA.isEnabled()) {
+        if(!myBluetooth.isEnabled()) {
             bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth1);
         } else {
             bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth);
@@ -81,10 +85,10 @@ public class AccelerometerMode extends AppCompatActivity {
             public void onClick(View v)  {
                 // change your light_bt background
 
-                if(isClicked){
+                if(isClicked) {
                     v.setBackgroundResource(R.drawable.ic_lightbulb);
                     turn_light_on(v);
-                }else{
+                }else {
                     v.setBackgroundResource(R.drawable.lightbulb);
                     turn_light_off(v);
                 }
@@ -99,7 +103,7 @@ public class AccelerometerMode extends AppCompatActivity {
                 Intent intent = new Intent(AccelerometerMode.this, MainActivity.class);
                 startActivity(intent);
 
-                Toast.makeText(getBaseContext(), "Arrow keys mode" , Toast.LENGTH_SHORT ).show();
+                msg("Arrow keys mode");
             }
         });
 
@@ -107,32 +111,50 @@ public class AccelerometerMode extends AppCompatActivity {
         enableAccelerometerListening();
     }
 
+    private void msg(String s) {
+        Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
+    }
+
     @Override
     public void onBackPressed() {
         //No codes...
     }
 
-    public void turn_bluetooth_on(View v){
-        if (!BA.isEnabled()) {
+    public void turn_bluetooth_on(View v) {
+        if (!myBluetooth.isEnabled()) {
             Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(turnOn, 0);
-            Toast.makeText(getApplicationContext(), "Turned on",Toast.LENGTH_LONG).show();
+            msg("Turned on");
         } else {
-            Toast.makeText(getApplicationContext(), "Already on", Toast.LENGTH_LONG).show();
+            msg("Already on");
         }
     }
 
-    public void turn_bluetooth_off(View v){
-        BA.disable();
-        Toast.makeText(getApplicationContext(), "Turned off" ,Toast.LENGTH_LONG).show();
+    public void turn_bluetooth_off(View v) {
+        myBluetooth.disable();
+        msg("Turned off");
     }
 
     public void turn_light_on(View v) {
-        Toast.makeText(getApplicationContext(), "Lights on", Toast.LENGTH_SHORT).show();
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Lights", "on");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("O".toString().getBytes());
+            } catch (IOException e1) {
+                msg("Error");
+            }
+        }
     }
 
     public void turn_light_off(View v) {
-        Toast.makeText(getApplicationContext(), "Lights off",Toast.LENGTH_SHORT).show();
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Lights", "off");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("F".toString().getBytes());
+            } catch (IOException e) {
+                msg("Error");
+            }
+        }
     }
 
     private void enableAccelerometerListening() {
@@ -196,18 +218,24 @@ public class AccelerometerMode extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            SettingsFragment fragment = new SettingsFragment();
-            android.support.v4.app.FragmentTransaction fragmentTransaction =
-                    getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.replace(R.id.fragment_container,fragment);
-            fragmentTransaction.commit();
+            FragmentManager fm = getSupportFragmentManager();
+            SettingsFragment editNameDialog = new SettingsFragment();
+            editNameDialog.show(fm, "fragment_settings");
         }
         else if(id == R.id.paired_devices) {
-            BluetoothDevicesFragment fragment = new BluetoothDevicesFragment();
-            android.support.v4.app.FragmentTransaction fragmentTransaction =
-                    getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.replace(R.id.fragment_container,fragment);
-            fragmentTransaction.commit();
+            FragmentManager fm = getSupportFragmentManager();
+            BluetoothDevicesFragment editNameDialog = new BluetoothDevicesFragment();
+            editNameDialog.show(fm, "fragment_bluetooth_devices");
+        }
+        else if(id == R.id.control) {
+            FragmentManager fm = getSupportFragmentManager();
+            ControlFragment editNameDialog = new ControlFragment();
+            editNameDialog.show(fm, "fragment_control");
+//            ControlFragment fragment = new ControlFragment();
+//            android.support.v4.app.FragmentTransaction fragmentTransaction =
+//                    getSupportFragmentManager().beginTransaction();
+//            fragmentTransaction.replace(R.id.fragment_container,fragment);
+//            fragmentTransaction.commit();
         }
         else if(id == R.id.about_app) {
             AboutFragment fragment = new AboutFragment();
@@ -219,6 +247,5 @@ public class AccelerometerMode extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
 }
 
