@@ -2,10 +2,6 @@ package com.example.bmihaylov.rcremotecontrol;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -22,7 +18,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,8 +31,6 @@ public class MainActivity extends AppCompatActivity {
     Button accelerometer_bt;
     Button light_bt;
     BluetoothAdapter myBluetooth = null;
-    //private final BluetoothSocket bluetoothSocket = null;
-    private final static UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     boolean isClicked = true;
 
     @Override
@@ -64,8 +57,18 @@ public class MainActivity extends AppCompatActivity {
 
         myBluetooth = BluetoothAdapter.getDefaultAdapter();
 
+        if (!myBluetooth.isEnabled()) {
+            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(turnOn, 0);
+            bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth);
+            msg("Turned on");
+        } else {
+            msg("Already on");
+        }
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+
 
         if(!myBluetooth.isEnabled()) {
             bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth1);
@@ -121,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
             msg("Accelerometer mode on");
             }
         });
+
+
+
     }
 
 //    // UI thread
@@ -191,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
         if (BluetoothDevicesFragment.bluetoothSocket != null) {
                 try {
                     Log.d("Lights", "on");
-                    BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("O".toString().getBytes());
+                    BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("O".getBytes());
                 } catch (IOException e1) {
                     msg("Error");
                 }
@@ -202,11 +208,55 @@ public class MainActivity extends AppCompatActivity {
             if (BluetoothDevicesFragment.bluetoothSocket != null) {
                 try {
                     Log.d("Lights", "off");
-                    BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("F".toString().getBytes());
+                    BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("o".getBytes());
                 } catch (IOException e) {
                     msg("Error");
                 }
             }
+    }
+
+    public void motorLeft(View v) {
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Motor", "left");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("L".getBytes());
+            } catch (IOException e) {
+                msg("Error");
+            }
+        }
+    }
+
+    public void motorRight(View v) {
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Motor", "right");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("R".getBytes());
+            } catch (IOException e) {
+                msg("Error");
+            }
+        }
+    }
+
+    public void motorForward(View v) {
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Motor", "forward");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("F".getBytes());
+            } catch (IOException e) {
+                msg("Error");
+            }
+        }
+    }
+
+    public void motorBack(View v) {
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Motor", "back");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("B".getBytes());
+            } catch (IOException e) {
+                msg("Error");
+            }
+        }
     }
 
     public View.OnTouchListener listener = (new View.OnTouchListener() {
@@ -216,15 +266,19 @@ public class MainActivity extends AppCompatActivity {
                 switch (view.getId()) {
                     case R.id.left_arrow_bt:
                         state_text.setText("LEFT...");
+                        motorLeft(view);
                         break;
                     case R.id.right_arrow_bt:
                         state_text.setText("RIGHT...");
+                        motorRight(view);
                         break;
                     case R.id.up_arrow_bt:
                         state_text.setText("FORWARD...");
+                        motorForward(view);
                         break;
                     case R.id.down_arrow_bt:
                         state_text.setText("BACKWARD...");
+                        motorBack(view);
                         break;
                 }
             }

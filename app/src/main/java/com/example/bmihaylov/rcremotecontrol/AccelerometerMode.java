@@ -35,7 +35,6 @@ public class AccelerometerMode extends AppCompatActivity {
 
     private SensorManager sensorManager;
     private BluetoothAdapter myBluetooth = null;
-    //    private Set<BluetoothDevice> pairedDevices;
     boolean isClicked = true; //shows if bluetooth button is clicked
 
     @Override
@@ -139,7 +138,7 @@ public class AccelerometerMode extends AppCompatActivity {
         if (BluetoothDevicesFragment.bluetoothSocket != null) {
             try {
                 Log.d("Lights", "on");
-                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("O".toString().getBytes());
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("O".getBytes());
             } catch (IOException e1) {
                 msg("Error");
             }
@@ -150,7 +149,7 @@ public class AccelerometerMode extends AppCompatActivity {
         if (BluetoothDevicesFragment.bluetoothSocket != null) {
             try {
                 Log.d("Lights", "off");
-                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("F".toString().getBytes());
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("F".getBytes());
             } catch (IOException e) {
                 msg("Error");
             }
