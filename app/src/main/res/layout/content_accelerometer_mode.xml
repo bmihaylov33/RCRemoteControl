@@ -72,6 +72,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
+        android:textColor="@color/colorPrimary"
         android:textSize="30dp"
         android:text="STAY"
         android:id="@+id/state_text"/>
@@ -117,6 +118,6 @@
         android:layout_width="34dp"
         android:background="@drawable/bt_normal_mode"
         android:layout_toLeftOf="@+id/bluetooth_bt"
-        android:id="@+id/normal_mode_bt" />
+        android:id="@+id/bt_normal_mode" />
 
 </RelativeLayout>

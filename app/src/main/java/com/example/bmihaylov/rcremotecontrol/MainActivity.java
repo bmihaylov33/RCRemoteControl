@@ -55,20 +55,16 @@ public class MainActivity extends AppCompatActivity {
         up_bt.setOnTouchListener(listener);
         down_bt.setOnTouchListener(listener);
 
-        myBluetooth = BluetoothAdapter.getDefaultAdapter();
+        StartFragment fragment = new StartFragment();
+        android.support.v4.app.FragmentTransaction fragmentTransaction =
+                getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container,fragment);
+        fragmentTransaction.commit();
 
-        if (!myBluetooth.isEnabled()) {
-            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(turnOn, 0);
-            bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth);
-            msg("Turned on");
-        } else {
-            msg("Already on");
-        }
+        myBluetooth = BluetoothAdapter.getDefaultAdapter();
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-
 
         if(!myBluetooth.isEnabled()) {
             bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth1);

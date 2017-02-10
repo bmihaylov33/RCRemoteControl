@@ -47,7 +47,7 @@ public class AccelerometerMode extends AppCompatActivity {
         state_text = (TextView) findViewById(R.id.state_text);
         distance_text = (TextView) findViewById(R.id.distance_text);
         bluetooth_bt = (Button) findViewById(R.id.bluetooth_bt);
-        normal_mode_bt = (Button) findViewById(R.id.normal_mode_bt);
+        normal_mode_bt = (Button) findViewById(R.id.bt_normal_mode);
         light_bt = (Button) findViewById(R.id.light_bt);
 
 //        textViewX = (TextView) findViewById(R.id.textViewX);
@@ -149,7 +149,51 @@ public class AccelerometerMode extends AppCompatActivity {
         if (BluetoothDevicesFragment.bluetoothSocket != null) {
             try {
                 Log.d("Lights", "off");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("o".getBytes());
+            } catch (IOException e) {
+                msg("Error");
+            }
+        }
+    }
+
+    public void motorLeft() {
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Motor", "left");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("L".getBytes());
+            } catch (IOException e) {
+                msg("Error");
+            }
+        }
+    }
+
+    public void motorRight() {
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Motor", "right");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("R".getBytes());
+            } catch (IOException e) {
+                msg("Error");
+            }
+        }
+    }
+
+    public void motorForward() {
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Motor", "forward");
                 BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("F".getBytes());
+            } catch (IOException e) {
+                msg("Error");
+            }
+        }
+    }
+
+    public void motorBack() {
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Motor", "back");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("B".getBytes());
             } catch (IOException e) {
                 msg("Error");
             }
@@ -177,20 +221,22 @@ public class AccelerometerMode extends AppCompatActivity {
 //                textViewZ.setText(String.valueOf(z));
 
                 if(x > 4) {
-                    state_text.setText("DOWN...");
+                    state_text.setText("BACKWARD...");
+                    motorBack();
                 }
                 else if(x < -4) {
-                    state_text.setText("UP...");
+                    state_text.setText("FORWARD...");
+                    motorForward();
                 }
-
                 if(y > 4) {
                     state_text.setText("RIGHT...");
+                    motorRight();
                 }
                 else if(y < -4) {
                     state_text.setText("LEFT...");
+                    motorLeft();
                 }
-
-                else if(-4 < x && x < 4) {
+                else if(x > -4 && x < 4) {
                     state_text.setText("STAY");
                 }
             }
