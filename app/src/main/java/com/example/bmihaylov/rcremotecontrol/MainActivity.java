@@ -55,16 +55,32 @@ public class MainActivity extends AppCompatActivity {
         up_bt.setOnTouchListener(listener);
         down_bt.setOnTouchListener(listener);
 
-        StartFragment fragment = new StartFragment();
-        android.support.v4.app.FragmentTransaction fragmentTransaction =
-                getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.fragment_container,fragment);
-        fragmentTransaction.commit();
+        Boolean isFirstRun = getSharedPreferences("PREFERENCES", MODE_PRIVATE)
+                .getBoolean("isfirstrun", true);
 
+        if(isFirstRun) {
+            Intent intent = new Intent(this, IntroActivity.class);
+            startActivity(intent);
+
+            getSharedPreferences("PREFERENCES", MODE_PRIVATE).edit()
+                    .putBoolean("isfirstrun", false).commit();
+        }
         myBluetooth = BluetoothAdapter.getDefaultAdapter();
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+
+        if (!myBluetooth.isEnabled()) {
+            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(turnOn, 0);
+            msg("Turned on");
+        } else {
+            msg("Already on");
+        }
+
+        FragmentManager fm = getSupportFragmentManager();
+        BluetoothDevicesFragment editNameDialog = new BluetoothDevicesFragment();
+        editNameDialog.show(fm, "fragment_bluetooth_devices");
 
         if(!myBluetooth.isEnabled()) {
             bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth1);
@@ -314,11 +330,6 @@ public class MainActivity extends AppCompatActivity {
             FragmentManager fm = getSupportFragmentManager();
             ControlFragment editNameDialog = new ControlFragment();
             editNameDialog.show(fm, "fragment_control");
-//            ControlFragment fragment = new ControlFragment();
-//            android.support.v4.app.FragmentTransaction fragmentTransaction =
-//                    getSupportFragmentManager().beginTransaction();
-//            fragmentTransaction.replace(R.id.fragment_container,fragment);
-//            fragmentTransaction.commit();
         }
         else if(id == R.id.about_app) {
             AboutFragment fragment = new AboutFragment();
