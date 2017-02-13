@@ -265,7 +265,7 @@ public class BluetoothDevicesFragment extends DialogFragment {
 
                 getDialog().dismiss();
 
-                bluetoothSocket.getOutputStream().write("O".toString().getBytes());
+                bluetoothSocket.getOutputStream().write("O".getBytes());
 
             } catch (IOException connectException) {
                 connectException.printStackTrace();

@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
@@ -32,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     Button light_bt;
     BluetoothAdapter myBluetooth = null;
     boolean isClicked = true;
+    SharedPreferences isFirstRun = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,16 +57,8 @@ public class MainActivity extends AppCompatActivity {
         up_bt.setOnTouchListener(listener);
         down_bt.setOnTouchListener(listener);
 
-        Boolean isFirstRun = getSharedPreferences("PREFERENCES", MODE_PRIVATE)
-                .getBoolean("isfirstrun", true);
+        isFirstRun = getSharedPreferences("com.example.bmihaylov.rcremotecontrol", MODE_PRIVATE);
 
-        if(isFirstRun) {
-            Intent intent = new Intent(this, IntroActivity.class);
-            startActivity(intent);
-
-            getSharedPreferences("PREFERENCES", MODE_PRIVATE).edit()
-                    .putBoolean("isfirstrun", false).commit();
-        }
         myBluetooth = BluetoothAdapter.getDefaultAdapter();
 
         IntentFilter filter = new IntentFilter();
@@ -138,7 +132,20 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (isFirstRun.getBoolean("firstrun", true)) {
+            // Do first run stuff here then set 'firstrun' as false
+            // using the following line to edit/commit prefs
+            Intent intent = new Intent(this, IntroActivity.class);
+            startActivity(intent);
+
+            isFirstRun.edit().putBoolean("firstrun", false).commit();
+        }
     }
 
 //    // UI thread
@@ -300,6 +307,17 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
     });
+
+    public void batteryState(View v) {
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("battery", "in");
+                BluetoothDevicesFragment.bluetoothSocket.getInputStream();
+            } catch (IOException e) {
+                msg("Error");
+            }
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
