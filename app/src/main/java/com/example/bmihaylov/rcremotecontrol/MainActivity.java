@@ -2,10 +2,12 @@ package com.example.bmihaylov.rcremotecontrol;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -15,10 +17,13 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,9 +36,15 @@ public class MainActivity extends AppCompatActivity {
     Button bluetooth_bt;
     Button accelerometer_bt;
     Button light_bt;
+    ImageView battery;
     BluetoothAdapter myBluetooth = null;
     boolean isClicked = true;
     SharedPreferences isFirstRun = null;
+    Handler bluetoothIn;
+
+    final int handlerState = 0;
+    private StringBuilder recDataString = new StringBuilder();
+//    private ConnectedThread mConnectedThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         bluetooth_bt = (Button) findViewById(R.id.bluetooth_bt);
         accelerometer_bt = (Button) findViewById(R.id.accelerometer_bt);
         light_bt = (Button) findViewById(R.id.light_bt);
+        battery = (ImageView) findViewById(R.id.battery_level);
 
         left_bt.setOnTouchListener(listener);
         right_bt.setOnTouchListener(listener);
@@ -65,31 +77,30 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
 
         if (!myBluetooth.isEnabled()) {
-            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(turnOn, 0);
+            myBluetooth.enable();
             msg("Turned on");
         } else {
             msg("Already on");
         }
 
-        FragmentManager fm = getSupportFragmentManager();
-        BluetoothDevicesFragment editNameDialog = new BluetoothDevicesFragment();
-        editNameDialog.show(fm, "fragment_bluetooth_devices");
+//        FragmentManager fm = getSupportFragmentManager();
+//        BluetoothDevicesFragment editNameDialog = new BluetoothDevicesFragment();
+//        editNameDialog.show(fm, "fragment_bluetooth_devices");
 
-        if(!myBluetooth.isEnabled()) {
+        if (!myBluetooth.isEnabled()) {
             bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth1);
         } else {
             bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth);
         }
 
         bluetooth_bt.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)  {
+            public void onClick(View v) {
                 // change your bluetooth_bt background
 
-                if(isClicked){
+                if (isClicked) {
                     v.setBackgroundResource(R.drawable.ic_bluetooth);
                     turn_bluetooth_on(v);
-                }else{
+                } else {
                     v.setBackgroundResource(R.drawable.ic_bluetooth1);
                     turn_bluetooth_off(v);
                 }
@@ -107,13 +118,13 @@ public class MainActivity extends AppCompatActivity {
 
                 if (isClicked) {
                     v.setBackgroundResource(R.drawable.ic_lightbulb);
-                    turn_light_on(v);
-                    msg("Lights on");
+                    turnShortLightOn(v);
+                    msg("Short lights on");
                     Log.d("Lights", "on");
 
                 } else {
                     v.setBackgroundResource(R.drawable.lightbulb);
-                    turn_light_off(v);
+                    turnLightOff(v);
                     msg("Lights off");
                 }
 
@@ -121,17 +132,57 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        accelerometer_bt.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)  {
+        light_bt.setOnLongClickListener(new View.OnLongClickListener() {
+            public boolean onLongClick(View v) {
+                // change your light_bt background
 
-            Intent intent = new Intent(MainActivity.this, AccelerometerMode.class);
-            startActivity(intent);
+                if (isClicked) {
+                    v.setBackgroundResource(R.drawable.ic_lightbulb);
+                    turnLongLightOn(v);
+                    msg("Long lights on");
+                    Log.d("Lights", "on");
+                }
 
-            msg("Accelerometer mode on");
+                isClicked = !isClicked; //reverse
+                return true;
             }
         });
 
+        accelerometer_bt.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
 
+                Intent intent = new Intent(MainActivity.this, AccelerometerMode.class);
+                startActivity(intent);
+
+                msg("Accelerometer mode on");
+            }
+        });
+
+        bluetoothIn = new Handler() {
+            public void handleMessage(android.os.Message msg) {
+                if (msg.what == handlerState) {                                        //if message is what we want
+                    String readMessage = (String) msg.obj;                              // msg.arg1 = bytes from connect thread
+                    recDataString.append(readMessage);                                  //keep appending to string until ~
+                    int endOfLineIndex = recDataString.indexOf("~");                    // determine the end-of-line
+                    if (endOfLineIndex > 0) {                                           // make sure there data before ~
+                        String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
+                        int dataLength = dataInPrint.length();                            //get length of data received
+
+                        if (recDataString.charAt(0) == '#') {                       //if it starts with # we know it is battery state
+                            String percentage = recDataString.substring(dataLength);
+                            setBatteryState(Float.valueOf(percentage));
+                        }
+//                        recDataString.delete(0, recDataString.length());                    //clear all string data
+
+                        else if (recDataString.charAt(0) == '/') {                       //if it starts with / we know it is distance state
+                            String distance = recDataString.substring(dataLength);
+                            displayDistance(Float.valueOf(distance));
+                        }
+                        recDataString.delete(0, recDataString.length());                    //clear all string data
+                    }
+                }
+            }
+        };
     }
 
     @Override
@@ -145,9 +196,11 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
 
             isFirstRun.edit().putBoolean("firstrun", false).commit();
+
+//            mConnectedThread = new ConnectedThread(BluetoothDevicesFragment.bluetoothSocket);
+//            mConnectedThread.start();
         }
     }
-
 //    // UI thread
 //    private boolean ConnectSuccess = true; //if it's here, it's almost connected
 ////
@@ -212,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
         msg("Turned off");
     }
 
-    public void turn_light_on(View v) {
+    public void turnLongLightOn(View v) {
         if (BluetoothDevicesFragment.bluetoothSocket != null) {
                 try {
                     Log.d("Lights", "on");
@@ -223,15 +276,44 @@ public class MainActivity extends AppCompatActivity {
             }
     }
 
-    public void turn_light_off(View v) {
+    public void turnShortLightOn(View v) {
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Lights", "on");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("o".getBytes());
+            } catch (IOException e1) {
+                msg("Error");
+            }
+        }
+    }
+
+    public void turnLightOff(View v) {
             if (BluetoothDevicesFragment.bluetoothSocket != null) {
                 try {
                     Log.d("Lights", "off");
-                    BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("o".getBytes());
+                    BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("s".getBytes());
                 } catch (IOException e) {
                     msg("Error");
                 }
             }
+    }
+
+    public void setBatteryState(float percentage) {
+        if(percentage > 80) {
+            battery.setImageResource(R.drawable.battery_full);
+        } else if(percentage > 60) {
+            battery.setImageResource(R.drawable.battery_60);
+        } else if(percentage > 30) {
+            battery.setImageResource(R.drawable.battery_30);
+        } else if(percentage > 20) {
+            battery.setImageResource(R.drawable.battery_20);
+        } else if(percentage < 20) {
+            battery.setImageResource(R.drawable.battery_empty);
+        }
+    }
+
+    public void displayDistance(float distance) {
+        distance_text.setText((int) distance + "cm");
     }
 
     public void motorLeft(View v) {
@@ -308,17 +390,6 @@ public class MainActivity extends AppCompatActivity {
         }
     });
 
-    public void batteryState(View v) {
-        if (BluetoothDevicesFragment.bluetoothSocket != null) {
-            try {
-                Log.d("battery", "in");
-                BluetoothDevicesFragment.bluetoothSocket.getInputStream();
-            } catch (IOException e) {
-                msg("Error");
-            }
-        }
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -339,14 +410,14 @@ public class MainActivity extends AppCompatActivity {
             SettingsFragment editNameDialog = new SettingsFragment();
             editNameDialog.show(fm, "fragment_settings");
         }
-        else if(id == R.id.paired_devices) {
+        else if (id == R.id.paired_devices) {
             FragmentManager fm = getSupportFragmentManager();
             BluetoothDevicesFragment editNameDialog = new BluetoothDevicesFragment();
             editNameDialog.show(fm, "fragment_bluetooth_devices");
         }
         else if(id == R.id.control) {
             FragmentManager fm = getSupportFragmentManager();
-            ControlFragment editNameDialog = new ControlFragment();
+            ControlCenterFragment editNameDialog = new ControlCenterFragment();
             editNameDialog.show(fm, "fragment_control");
         }
         else if(id == R.id.about_app) {
@@ -359,4 +430,55 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+//    //create new class for connect thread
+//    private class ConnectedThread extends Thread {
+//        private final InputStream mmInStream;
+//        private final OutputStream mmOutStream;
+//
+//        //creation of the connect thread
+//        public ConnectedThread(BluetoothSocket socket) {
+//            InputStream tmpIn = null;
+//            OutputStream tmpOut = null;
+//
+//            try {
+//                //Create I/O streams for connection
+//                tmpIn = socket.getInputStream();
+//                tmpOut = socket.getOutputStream();
+//            } catch (IOException e) { }
+//
+//            mmInStream = tmpIn;
+//            mmOutStream = tmpOut;
+//        }
+//
+//
+//        public void run() {
+//            byte[] buffer = new byte[256];
+//            int bytes;
+//
+//            // Keep looping to listen for received messages
+//            while (true) {
+//                try {
+//                    bytes = mmInStream.read(buffer);        	//read bytes from input buffer
+//                    String readMessage = new String(buffer, 0, bytes);
+//                    // Send the obtained bytes to the UI Activity via handler
+//                    bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
+//                } catch (IOException e) {
+//                    break;
+//                }
+//            }
+//        }
+//        //write method
+//        public void write(String input) {
+//            byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
+//            try {
+//                mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
+//            } catch (IOException e) {
+//                //if you cannot write, close the application
+//                Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
+//                finish();
+//
+//            }
+//        }
+//    }
 }

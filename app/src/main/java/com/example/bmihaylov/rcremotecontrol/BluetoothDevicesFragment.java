@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -23,6 +24,8 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
 
 
@@ -40,6 +43,11 @@ public class BluetoothDevicesFragment extends DialogFragment {
     private static final int ENABLE_BT_REQUEST_CODE = 1;
     private static final int DISCOVERABLE_BT_REQUEST_CODE = 2;
     private static final int DISCOVERABLE_DURATION = 300;
+//    private ConnectedThread mConnectedThread;
+    Handler bluetoothIn;
+
+    final int handlerState = 0;
+
 
     // Create a BroadcastReceiver for ACTION_FOUND
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -166,6 +174,7 @@ public class BluetoothDevicesFragment extends DialogFragment {
         // Register the BroadcastReceiver for ACTION_FOUND
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         getActivity().registerReceiver(broadcastReceiver, filter);
+
     }
 
     @Override
@@ -203,7 +212,7 @@ public class BluetoothDevicesFragment extends DialogFragment {
 
                     getActivity().runOnUiThread(new Runnable() {
                         public void run() {
-                            Toast.makeText(getActivity(), "Connected",Toast.LENGTH_SHORT).show();
+                           //Toast.makeText(getActivity(), "Connected",Toast.LENGTH_SHORT).show();
                         }
                     });
 
@@ -236,8 +245,8 @@ public class BluetoothDevicesFragment extends DialogFragment {
 
         private final BluetoothDevice bluetoothDevice;
 
+        //creation of the connect thread
         public ConnectThread(BluetoothDevice device) {
-
             BluetoothSocket temp = null;
             bluetoothDevice = device;
 
@@ -252,11 +261,14 @@ public class BluetoothDevicesFragment extends DialogFragment {
                 }
             }
             bluetoothSocket = temp;
+
         }
 
         public void run() {
             // Cancel any discovery as it will slow down the connection
-        myBluetooth.cancelDiscovery();
+            myBluetooth.cancelDiscovery();
+            byte[] buffer = new byte[256];
+            int bytes;
 
             try {
                 // This will block until it succeeds in connecting to the device
@@ -275,7 +287,6 @@ public class BluetoothDevicesFragment extends DialogFragment {
                     closeException.printStackTrace();
                 }
             }
-
             // Code to manage the connection in a separate thread
         /*
             manageBluetoothConnection(bluetoothSocket);

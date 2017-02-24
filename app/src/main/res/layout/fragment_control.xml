@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginTop="?attr/actionBarSize"
-    tools:context="com.example.bmihaylov.rcremotecontrol.ControlFragment">
+    tools:context="com.example.bmihaylov.rcremotecontrol.ControlCenterFragment">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -19,13 +19,15 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:text="New">
+            android:text="New"
+            android:id="@+id/new_bt">
         </Button>
 
         <Button
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:text="Saved">
+            android:text="Saved"
+            android:id="@+id/saved_bt">
         </Button>
 
     </LinearLayout>

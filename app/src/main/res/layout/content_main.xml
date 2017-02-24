@@ -9,6 +9,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:background="@color/colorPrimary"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.example.bmihaylov.rcremotecontrol.MainActivity"
     tools:showIn="@layout/activity_main">
@@ -66,7 +67,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:textColor="@color/colorPrimary"
+        android:textColor="@color/colorPrimaryDark"
         android:textSize="30dp"
         android:text="STAY"
         android:id="@+id/state_text"/>
@@ -93,18 +94,18 @@
         android:layout_below="@+id/distance"
         android:id="@+id/light_bt"/>
 
-    <Button
+    <ImageView
         android:layout_height="34dp"
         android:layout_width="34dp"
-        android:background="@drawable/battery_full"
+        android:background="@drawable/battery_20"
         android:layout_alignParentRight="true"
-        android:id="@+id/baterry_level" />
+        android:id="@+id/battery_level" />
 
     <Button
         android:layout_height="34dp"
         android:layout_width="34dp"
         android:background="@drawable/ic_bluetooth1"
-        android:layout_toLeftOf="@+id/baterry_level"
+        android:layout_toLeftOf="@+id/battery_level"
         android:id="@+id/bluetooth_bt" />
 
     <Button

@@ -81,18 +81,38 @@ public class AccelerometerMode extends AppCompatActivity {
         light_bt.setBackgroundResource(R.drawable.lightbulb);
 
         light_bt.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)  {
+            public void onClick(View v) {
                 // change your light_bt background
 
-                if(isClicked) {
+                if (isClicked) {
                     v.setBackgroundResource(R.drawable.ic_lightbulb);
-                    turn_light_on(v);
-                }else {
+                    turnShortLightOn(v);
+                    msg("Short lights on");
+                    Log.d("Lights", "on");
+
+                } else {
                     v.setBackgroundResource(R.drawable.lightbulb);
-                    turn_light_off(v);
+                    turnLightOff(v);
+                    msg("Lights off");
                 }
 
                 isClicked = !isClicked; //reverse
+            }
+        });
+
+        light_bt.setOnLongClickListener(new View.OnLongClickListener() {
+            public boolean onLongClick(View v) {
+                // change your light_bt background
+
+                if (isClicked) {
+                    v.setBackgroundResource(R.drawable.ic_lightbulb);
+                    turnLongLightOn(v);
+                    msg("Long lights on");
+                    Log.d("Lights", "on");
+                }
+
+                isClicked = !isClicked; //reverse
+                return true;
             }
         });
 
@@ -116,7 +136,7 @@ public class AccelerometerMode extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        //No codes...
+        finish();
     }
 
     public void turn_bluetooth_on(View v) {
@@ -134,7 +154,7 @@ public class AccelerometerMode extends AppCompatActivity {
         msg("Turned off");
     }
 
-    public void turn_light_on(View v) {
+    public void turnLongLightOn(View v) {
         if (BluetoothDevicesFragment.bluetoothSocket != null) {
             try {
                 Log.d("Lights", "on");
@@ -145,11 +165,22 @@ public class AccelerometerMode extends AppCompatActivity {
         }
     }
 
-    public void turn_light_off(View v) {
+    public void turnShortLightOn(View v) {
+        if (BluetoothDevicesFragment.bluetoothSocket != null) {
+            try {
+                Log.d("Lights", "on");
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("o".getBytes());
+            } catch (IOException e1) {
+                msg("Error");
+            }
+        }
+    }
+
+    public void turnLightOff(View v) {
         if (BluetoothDevicesFragment.bluetoothSocket != null) {
             try {
                 Log.d("Lights", "off");
-                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("o".getBytes());
+                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("s".getBytes());
             } catch (IOException e) {
                 msg("Error");
             }
@@ -267,16 +298,16 @@ public class AccelerometerMode extends AppCompatActivity {
             SettingsFragment editNameDialog = new SettingsFragment();
             editNameDialog.show(fm, "fragment_settings");
         }
-        else if(id == R.id.paired_devices) {
-            FragmentManager fm = getSupportFragmentManager();
-            BluetoothDevicesFragment editNameDialog = new BluetoothDevicesFragment();
-            editNameDialog.show(fm, "fragment_bluetooth_devices");
-        }
+//        else if(id == R.id.paired_devices) {
+//            FragmentManager fm = getSupportFragmentManager();
+//            BluetoothDevicesFragment editNameDialog = new BluetoothDevicesFragment();
+//            editNameDialog.show(fm, "fragment_bluetooth_devices");
+//        }
         else if(id == R.id.control) {
             FragmentManager fm = getSupportFragmentManager();
-            ControlFragment editNameDialog = new ControlFragment();
+            ControlCenterFragment editNameDialog = new ControlCenterFragment();
             editNameDialog.show(fm, "fragment_control");
-//            ControlFragment fragment = new ControlFragment();
+//            ControlCenterFragment fragment = new ControlCenterFragment();
 //            android.support.v4.app.FragmentTransaction fragmentTransaction =
 //                    getSupportFragmentManager().beginTransaction();
 //            fragmentTransaction.replace(R.id.fragment_container,fragment);
