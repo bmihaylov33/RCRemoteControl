@@ -129,7 +129,7 @@ public class IntroActivity extends Activity {
     }
 
     private void launchHomeScreen() {
-        startActivity(new Intent(this, MainActivity.class));
+        startActivity(new Intent(this, DeviceActivity.class));
         finish();
     }
 

@@ -83,7 +83,7 @@ public class BluetoothDevicesFragment extends DialogFragment {
             adapter.clear();
             discoverDevices();
             // Make local device discoverable by other devices
-            makeDiscoverable();
+            //makeDiscoverable();
             Log.d("enabled", "in");
         } else {
             myBluetooth .disable();
@@ -119,7 +119,7 @@ public class BluetoothDevicesFragment extends DialogFragment {
                         Toast.LENGTH_SHORT).show();
 
                 // Make local device discoverable by other devices
-                makeDiscoverable();
+                //makeDiscoverable();
 
                 // To discover remote Bluetooth devices
                 discoverDevices();
@@ -266,10 +266,6 @@ public class BluetoothDevicesFragment extends DialogFragment {
 
         public void run() {
             // Cancel any discovery as it will slow down the connection
-            myBluetooth.cancelDiscovery();
-            byte[] buffer = new byte[256];
-            int bytes;
-
             try {
                 // This will block until it succeeds in connecting to the device
                 // through the bluetoothSocket or throws an exception
@@ -278,6 +274,9 @@ public class BluetoothDevicesFragment extends DialogFragment {
                 getDialog().dismiss();
 
                 bluetoothSocket.getOutputStream().write("O".getBytes());
+
+                Intent intent = new Intent(getActivity(), MainActivity.class);
+                startActivity(intent);
 
             } catch (IOException connectException) {
                 connectException.printStackTrace();

@@ -97,7 +97,7 @@
     <ImageView
         android:layout_height="34dp"
         android:layout_width="34dp"
-        android:background="@drawable/battery_20"
+        android:background="@drawable/battery_outline"
         android:layout_alignParentRight="true"
         android:id="@+id/battery_level" />
 

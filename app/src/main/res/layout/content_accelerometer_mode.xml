@@ -103,7 +103,7 @@
     <Button
         android:layout_height="34dp"
         android:layout_width="34dp"
-        android:background="@drawable/ic_baterry"
+        android:background="@drawable/battery_full"
         android:layout_alignParentRight="true"
         android:id="@+id/baterry_level" />
 

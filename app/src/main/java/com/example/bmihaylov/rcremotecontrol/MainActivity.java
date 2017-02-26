@@ -24,6 +24,7 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,14 +38,21 @@ public class MainActivity extends AppCompatActivity {
     Button accelerometer_bt;
     Button light_bt;
     ImageView battery;
-    BluetoothAdapter myBluetooth = null;
     boolean isClicked = true;
-    SharedPreferences isFirstRun = null;
+//    SharedPreferences isFirstRun = null;
     Handler bluetoothIn;
 
     final int handlerState = 0;
+    private BluetoothAdapter btAdapter = null;
+    private BluetoothSocket btSocket = null;
     private StringBuilder recDataString = new StringBuilder();
-//    private ConnectedThread mConnectedThread;
+    private ConnectedThread mConnectedThread;
+
+    // SPP UUID service - this should work for most devices
+    private static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
+    // String for MAC address
+    private static String address;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,29 +77,14 @@ public class MainActivity extends AppCompatActivity {
         up_bt.setOnTouchListener(listener);
         down_bt.setOnTouchListener(listener);
 
-        isFirstRun = getSharedPreferences("com.example.bmihaylov.rcremotecontrol", MODE_PRIVATE);
+//        if (!myBluetooth.isEnabled()) {
+//            bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth1);
+//        } else {
+//            bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth);
+//        }
 
-        myBluetooth = BluetoothAdapter.getDefaultAdapter();
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-
-        if (!myBluetooth.isEnabled()) {
-            myBluetooth.enable();
-            msg("Turned on");
-        } else {
-            msg("Already on");
-        }
-
-//        FragmentManager fm = getSupportFragmentManager();
-//        BluetoothDevicesFragment editNameDialog = new BluetoothDevicesFragment();
-//        editNameDialog.show(fm, "fragment_bluetooth_devices");
-
-        if (!myBluetooth.isEnabled()) {
-            bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth1);
-        } else {
-            bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth);
-        }
+        btAdapter = BluetoothAdapter.getDefaultAdapter();       // get Bluetooth adapter
+        checkBTState();
 
         bluetooth_bt.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -166,17 +159,27 @@ public class MainActivity extends AppCompatActivity {
                     int endOfLineIndex = recDataString.indexOf("~");                    // determine the end-of-line
                     if (endOfLineIndex > 0) {                                           // make sure there data before ~
                         String dataInPrint = recDataString.substring(0, endOfLineIndex);    // extract string
+                        distance_text.setText(dataInPrint + "cm");
+
                         int dataLength = dataInPrint.length();                            //get length of data received
 
-                        if (recDataString.charAt(0) == '#') {                       //if it starts with # we know it is battery state
-                            String percentage = recDataString.substring(dataLength);
-                            setBatteryState(Float.valueOf(percentage));
-                        }
-//                        recDataString.delete(0, recDataString.length());                    //clear all string data
 
-                        else if (recDataString.charAt(0) == '/') {                       //if it starts with / we know it is distance state
-                            String distance = recDataString.substring(dataLength);
-                            displayDistance(Float.valueOf(distance));
+
+                        if (recDataString.charAt(0) == '/') {                       //if it starts with # we know it is battery state
+                            String distance = dataInPrint;
+                            distance = distance.substring(1, dataLength);
+                            displayDistance(distance);
+
+                            dataInPrint = " ";
+                            recDataString.delete(0, recDataString.length());                    //clear all string data
+                        }
+                        else if (recDataString.charAt(0) == '#') {                       //if it starts with / we know it is distance state
+                            String percentage = dataInPrint;
+                            percentage = percentage.substring(1, dataLength);
+                            setBatteryState(Float.parseFloat(percentage));
+
+                            dataInPrint = " ";
+                            recDataString.delete(0, recDataString.length());                    //clear all string data
                         }
                         recDataString.delete(0, recDataString.length());                    //clear all string data
                     }
@@ -185,22 +188,52 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+    private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
+
+        return  device.createRfcommSocketToServiceRecord(BTMODULEUUID);
+        //creates secure outgoing connecetion with BT device using UUID
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
 
-        if (isFirstRun.getBoolean("firstrun", true)) {
-            // Do first run stuff here then set 'firstrun' as false
-            // using the following line to edit/commit prefs
-            Intent intent = new Intent(this, IntroActivity.class);
-            startActivity(intent);
+        //Get MAC address from DeviceListActivity via intent
+        Intent intent = getIntent();
 
-            isFirstRun.edit().putBoolean("firstrun", false).commit();
+        //Get the MAC address from the DeviceListActivty via EXTRA
+        address = intent.getStringExtra(DeviceActivity.EXTRA_DEVICE_ADDRESS);
 
-//            mConnectedThread = new ConnectedThread(BluetoothDevicesFragment.bluetoothSocket);
-//            mConnectedThread.start();
+        //create device and set the MAC address
+        BluetoothDevice device = btAdapter.getRemoteDevice(address);
+
+        try {
+            btSocket = createBluetoothSocket(device);
+        } catch (IOException e) {
+            Toast.makeText(getBaseContext(), "Socket creation failed", Toast.LENGTH_LONG).show();
         }
-    }
+        // Establish the Bluetooth socket connection.
+        try
+        {
+            btSocket.connect();
+        } catch (IOException e) {
+            try
+            {
+                btSocket.close();
+            } catch (IOException e2)
+            {
+                //insert code to deal with this
+            }
+        }
+        mConnectedThread = new ConnectedThread(btSocket);
+        mConnectedThread.start();
+
+        //I send a character when resuming.beginning transmission to check device is connected
+        //If it is not an exception will be thrown in the write method and finish() will be called
+        mConnectedThread.write("x");
+
+        }
+//    }
 //    // UI thread
 //    private boolean ConnectSuccess = true; //if it's here, it's almost connected
 ////
@@ -241,6 +274,84 @@ public class MainActivity extends AppCompatActivity {
 //        //progress.dismiss();
 //    }
 
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        try
+        {
+            //Don't leave Bluetooth sockets open when leaving activity
+            btSocket.close();
+        } catch (IOException e2) {
+            //insert code to deal with this
+        }
+    }
+
+    //Checks that the Android device Bluetooth is available and prompts to be turned on if off
+    private void checkBTState() {
+
+        if(btAdapter==null) {
+            Toast.makeText(getBaseContext(), "Device does not support bluetooth", Toast.LENGTH_LONG).show();
+        } else {
+            if (btAdapter.isEnabled()) {
+            } else {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, 1);
+            }
+        }
+    }
+
+    //create new class for connect thread
+    private class ConnectedThread extends Thread {
+        private final InputStream mmInStream;
+        private final OutputStream mmOutStream;
+
+        //creation of the connect thread
+        public ConnectedThread(BluetoothSocket socket) {
+            InputStream tmpIn = null;
+            OutputStream tmpOut = null;
+
+            try {
+                //Create I/O streams for connection
+                tmpIn = socket.getInputStream();
+                tmpOut = socket.getOutputStream();
+            } catch (IOException e) { }
+
+            mmInStream = tmpIn;
+            mmOutStream = tmpOut;
+        }
+
+
+        public void run() {
+            byte[] buffer = new byte[256];
+            int bytes;
+
+            // Keep looping to listen for received messages
+            while (true) {
+                try {
+                    bytes = mmInStream.read(buffer);        	//read bytes from input buffer
+                    String readMessage = new String(buffer, 0, bytes);
+                    // Send the obtained bytes to the UI Activity via handler
+                    bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
+                } catch (IOException e) {
+                    break;
+                }
+            }
+        }
+        //write method
+        public void write(String input) {
+            byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
+            try {
+                mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
+            } catch (IOException e) {
+                //if you cannot write, close the application
+                Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
+                finish();
+
+            }
+        }
+    }
+
     private void msg(String s) {
         Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
     }
@@ -251,9 +362,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void turn_bluetooth_on(View v) {
-        if (!myBluetooth.isEnabled()) {
-            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(turnOn, 0);
+        if (!btAdapter.isEnabled()) {
+            btAdapter.enable();
             msg("Turned on");
         } else {
             msg("Already on");
@@ -261,7 +371,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void turn_bluetooth_off(View v) {
-        myBluetooth.disable();
+        btAdapter.disable();
         msg("Turned off");
     }
 
@@ -298,22 +408,24 @@ public class MainActivity extends AppCompatActivity {
             }
     }
 
-    public void setBatteryState(float percentage) {
+    public void setBatteryState(Float percentage) {
         if(percentage > 80) {
             battery.setImageResource(R.drawable.battery_full);
-        } else if(percentage > 60) {
+        } else if(percentage <= 80 & percentage > 60) {
+            battery.setImageResource(R.drawable.battery_80);
+        } else if(percentage <= 60 & percentage > 40) {
             battery.setImageResource(R.drawable.battery_60);
-        } else if(percentage > 30) {
-            battery.setImageResource(R.drawable.battery_30);
-        } else if(percentage > 20) {
+        } else if(percentage <= 40 & percentage > 20) {
+            battery.setImageResource(R.drawable.battery_40);
+        } else if(percentage >= 20) {
             battery.setImageResource(R.drawable.battery_20);
         } else if(percentage < 20) {
-            battery.setImageResource(R.drawable.battery_empty);
+            battery.setImageResource(R.drawable.battery_outline);
         }
     }
 
-    public void displayDistance(float distance) {
-        distance_text.setText((int) distance + "cm");
+    public void displayDistance(String distance) {
+        distance_text.setText(distance + " cm");
     }
 
     public void motorLeft(View v) {
@@ -430,55 +542,4 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-//    //create new class for connect thread
-//    private class ConnectedThread extends Thread {
-//        private final InputStream mmInStream;
-//        private final OutputStream mmOutStream;
-//
-//        //creation of the connect thread
-//        public ConnectedThread(BluetoothSocket socket) {
-//            InputStream tmpIn = null;
-//            OutputStream tmpOut = null;
-//
-//            try {
-//                //Create I/O streams for connection
-//                tmpIn = socket.getInputStream();
-//                tmpOut = socket.getOutputStream();
-//            } catch (IOException e) { }
-//
-//            mmInStream = tmpIn;
-//            mmOutStream = tmpOut;
-//        }
-//
-//
-//        public void run() {
-//            byte[] buffer = new byte[256];
-//            int bytes;
-//
-//            // Keep looping to listen for received messages
-//            while (true) {
-//                try {
-//                    bytes = mmInStream.read(buffer);        	//read bytes from input buffer
-//                    String readMessage = new String(buffer, 0, bytes);
-//                    // Send the obtained bytes to the UI Activity via handler
-//                    bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
-//                } catch (IOException e) {
-//                    break;
-//                }
-//            }
-//        }
-//        //write method
-//        public void write(String input) {
-//            byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
-//            try {
-//                mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
-//            } catch (IOException e) {
-//                //if you cannot write, close the application
-//                Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
-//                finish();
-//
-//            }
-//        }
-//    }
 }
