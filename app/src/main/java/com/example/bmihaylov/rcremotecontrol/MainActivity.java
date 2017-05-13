@@ -39,14 +39,13 @@ public class MainActivity extends AppCompatActivity {
     Button light_bt;
     ImageView battery;
     boolean isClicked = true;
-//    SharedPreferences isFirstRun = null;
     Handler bluetoothIn;
 
     final int handlerState = 0;
     private BluetoothAdapter btAdapter = null;
     private BluetoothSocket btSocket = null;
     private StringBuilder recDataString = new StringBuilder();
-    private ConnectedThread mConnectedThread;
+    public ConnectedThread mConnectedThread;
 
     // SPP UUID service - this should work for most devices
     private static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -72,19 +71,34 @@ public class MainActivity extends AppCompatActivity {
         light_bt = (Button) findViewById(R.id.light_bt);
         battery = (ImageView) findViewById(R.id.battery_level);
 
-        left_bt.setOnTouchListener(listener);
+        MyTouchListener listener = new MyTouchListener();
+
+        left_bt.setOnTouchListener(listener);//(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View view, MotionEvent motionEvent) {
+//                if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+//                    Log.d("up_arow", "in");
+//                    state_text.setText("FORWARD...");
+//                    motorForward();
+//                } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+//                    motorStop();
+//                } return false;
+//            }
+//        });
         right_bt.setOnTouchListener(listener);
         up_bt.setOnTouchListener(listener);
         down_bt.setOnTouchListener(listener);
 
-//        if (!myBluetooth.isEnabled()) {
-//            bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth1);
-//        } else {
-//            bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth);
-//        }
+
 
         btAdapter = BluetoothAdapter.getDefaultAdapter();       // get Bluetooth adapter
         checkBTState();
+
+        if (!btAdapter.isEnabled()) {
+            bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth1);
+        } else {
+            bluetooth_bt.setBackgroundResource(R.drawable.ic_bluetooth);
+        }
 
         bluetooth_bt.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -145,6 +159,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 Intent intent = new Intent(MainActivity.this, AccelerometerMode.class);
+//                intent.putExtra(EXTRA_, address);
                 startActivity(intent);
 
                 msg("Accelerometer mode on");
@@ -191,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
 
         return  device.createRfcommSocketToServiceRecord(BTMODULEUUID);
-        //creates secure outgoing connecetion with BT device using UUID
+        //creates secure outgoing connection with BT device using UUID
     }
 
     @Override
@@ -213,16 +228,20 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getBaseContext(), "Socket creation failed", Toast.LENGTH_LONG).show();
         }
         // Establish the Bluetooth socket connection.
-        try
-        {
+        try {
             btSocket.connect();
         } catch (IOException e) {
-            try
-            {
+            try {
                 btSocket.close();
-            } catch (IOException e2)
-            {
+            } catch (IOException e2) {
                 //insert code to deal with this
+            }
+        }
+        if (btSocket != null) {
+            try {
+                btSocket.getOutputStream().write("O".getBytes());
+            } catch (IOException e) {
+                msg("Error");
             }
         }
         mConnectedThread = new ConnectedThread(btSocket);
@@ -230,60 +249,19 @@ public class MainActivity extends AppCompatActivity {
 
         //I send a character when resuming.beginning transmission to check device is connected
         //If it is not an exception will be thrown in the write method and finish() will be called
-        mConnectedThread.write("x");
+//        mConnectedThread.write("x");
 
         }
-//    }
-//    // UI thread
-//    private boolean ConnectSuccess = true; //if it's here, it's almost connected
-////
-//////    protected void onPreExecute() {
-//////        progress = ProgressDialog.show(MainActivity.this, "Connecting...", "Please wait!!!");  //show a progress dialog
-//////    }
-////
-//    protected Void doInBackground(Void... devices) {
-//
-//        private final BluetoothDevice bluetoothDevice;
-//        //while the progress dialog is shown, the connection is done in background
-//        try {
-//            if (bluetoothSocket == null || !isBtConnected) {
-//
-//                myBluetooth = BluetoothAdapter.getDefaultAdapter();//get the mobile bluetooth device
-//                //BluetoothDevice dispositivo = myBluetooth.getRemoteDevice(address);//connects to the device's address and checks if it's available
-//                bluetoothSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(uuid);//create a RFCOMM (SPP) connection
-//                BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
-//                bluetoothSocket.connect();//start connection
-//            }
-//        }
-//        catch (IOException e) {
-//            ConnectSuccess = false;//if the try failed, you can check the exception here
-//        }
-//        return null;
-//    }
-//
-//    protected void onPostExecute(Void result) {//after the doInBackground, it checks if everything went fine
-//
-//        if (!ConnectSuccess) {
-//            msg("Connection Failed. Is it a SPP Bluetooth? Try again.");
-//            finish();
-//        }
-//        else {
-//            msg("Connected.");
-//            isBtConnected = true;
-//        }
-//        //progress.dismiss();
-//    }
 
     @Override
     public void onPause()
     {
         super.onPause();
-        try
-        {
-            //Don't leave Bluetooth sockets open when leaving activity
+        try {
+            //Closing Bluetooth sockets when leaving activity
             btSocket.close();
         } catch (IOException e2) {
-            //insert code to deal with this
+            //code
         }
     }
 
@@ -302,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //create new class for connect thread
-    private class ConnectedThread extends Thread {
+    public class ConnectedThread extends Thread {
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
 
@@ -340,9 +318,9 @@ public class MainActivity extends AppCompatActivity {
         }
         //write method
         public void write(String input) {
-            byte[] msgBuffer = input.getBytes();           //converts entered String into bytes
+            byte[] msgBuffer = input.getBytes();            //converts entered String into bytes
             try {
-                mmOutStream.write(msgBuffer);                //write bytes over BT connection via outstream
+                mmOutStream.write(msgBuffer);                //write bytes over BT connection via output stream
             } catch (IOException e) {
                 //if you cannot write, close the application
                 Toast.makeText(getBaseContext(), "Connection Failure", Toast.LENGTH_LONG).show();
@@ -376,36 +354,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void turnLongLightOn(View v) {
-        if (BluetoothDevicesFragment.bluetoothSocket != null) {
-                try {
-                    Log.d("Lights", "on");
-                    BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("O".getBytes());
-                } catch (IOException e1) {
-                    msg("Error");
-                }
-            }
+        Log.d("Lights", "on");
+        mConnectedThread.write("O");
     }
 
     public void turnShortLightOn(View v) {
-        if (BluetoothDevicesFragment.bluetoothSocket != null) {
-            try {
-                Log.d("Lights", "on");
-                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("o".getBytes());
-            } catch (IOException e1) {
-                msg("Error");
-            }
-        }
+        mConnectedThread.write("o");
     }
 
     public void turnLightOff(View v) {
-            if (BluetoothDevicesFragment.bluetoothSocket != null) {
-                try {
-                    Log.d("Lights", "off");
-                    BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("s".getBytes());
-                } catch (IOException e) {
-                    msg("Error");
-                }
-            }
+        Log.d("Lights", "off");
+        mConnectedThread.write("s");
     }
 
     public void setBatteryState(Float percentage) {
@@ -428,79 +387,85 @@ public class MainActivity extends AppCompatActivity {
         distance_text.setText(distance + " cm");
     }
 
-    public void motorLeft(View v) {
-        if (BluetoothDevicesFragment.bluetoothSocket != null) {
-            try {
-                Log.d("Motor", "left");
-                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("L".getBytes());
-            } catch (IOException e) {
-                msg("Error");
-            }
-        }
+    public void motorForward() {
+        Log.d("Motor", "forward");
+        mConnectedThread.write("F");
     }
 
-    public void motorRight(View v) {
-        if (BluetoothDevicesFragment.bluetoothSocket != null) {
-            try {
-                Log.d("Motor", "right");
-                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("R".getBytes());
-            } catch (IOException e) {
-                msg("Error");
-            }
-        }
+    public void motorBack() {
+        Log.d("Motor", "back");
+        mConnectedThread.write("B");
     }
 
-    public void motorForward(View v) {
-        if (BluetoothDevicesFragment.bluetoothSocket != null) {
-            try {
-                Log.d("Motor", "forward");
-                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("F".getBytes());
-            } catch (IOException e) {
-                msg("Error");
-            }
-        }
+    public void motorLeft() {
+        Log.d("Motor", "left");
+        mConnectedThread.write("L");
     }
 
-    public void motorBack(View v) {
-        if (BluetoothDevicesFragment.bluetoothSocket != null) {
-            try {
-                Log.d("Motor", "back");
-                BluetoothDevicesFragment.bluetoothSocket.getOutputStream().write("B".getBytes());
-            } catch (IOException e) {
-                msg("Error");
-            }
-        }
+    public void motorRight() {
+        Log.d("Motor", "right");
+        mConnectedThread.write("R");
     }
 
-    public View.OnTouchListener listener = (new View.OnTouchListener() {
+    public void motorStop() {
+        Log.d("Motor", "stop");
+        mConnectedThread.write("Q");
+    }
+
+    public class MyTouchListener implements View.OnTouchListener  {
         @Override
         public boolean onTouch(View view, MotionEvent event) {
             if(event.getAction() == MotionEvent.ACTION_DOWN) {
+
                 switch (view.getId()) {
                     case R.id.left_arrow_bt:
+//                        if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                        Log.d("left_arow", "in");
                         state_text.setText("LEFT...");
-                        motorLeft(view);
+                        mConnectedThread.write("L");
+                        motorLeft();
+//                        } else if(event.getAction() == MotionEvent.ACTION_UP) {
+//                            Log.d("Motorleft", "stop");
+//                           mConnectedThread.write("Q");
+//                             motorStop();
+//                        }
                         break;
                     case R.id.right_arrow_bt:
+//                        if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                        Log.d("right_arow", "in");
                         state_text.setText("RIGHT...");
-                        motorRight(view);
+                        motorRight();
+//                        } else if(event.getAction() == MotionEvent.ACTION_UP) {
+//                            Log.d("right_arow", "stop");
+//                            motorStop();
+//                        }
                         break;
                     case R.id.up_arrow_bt:
+//                        if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                        Log.d("up_arow", "in");
                         state_text.setText("FORWARD...");
-                        motorForward(view);
+                        motorForward();
+//                        } else if(event.getAction() == MotionEvent.ACTION_UP) {
+//                            motorStop();
+//                        }
                         break;
                     case R.id.down_arrow_bt:
+//                        if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                        Log.d("back_arow", "in");
                         state_text.setText("BACKWARD...");
-                        motorBack(view);
-                        break;
+                        motorBack();
+//                        } else if(event.getAction() == MotionEvent.ACTION_UP) {
+//                            motorStop();
+//                        }
+//                        break;
                 }
-            }
-            else if(event.getAction() == MotionEvent.ACTION_UP) {
+            } else if(event.getAction() == MotionEvent.ACTION_UP) {
                 state_text.setText("STAY");
-            }
-            return false;
+                motorStop();
+            }      return false;
+
         }
-    });
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

@@ -1,6 +1,7 @@
 package com.example.bmihaylov.rcremotecontrol;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentManager;
@@ -31,11 +32,19 @@ public class ControlCenterFragment extends DialogFragment {
         new_bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ControlFragment fragment = new ControlFragment();
-                android.support.v4.app.FragmentTransaction fragmentTransaction =
-                        getActivity().getSupportFragmentManager().beginTransaction();
-                fragmentTransaction.replace(R.id.fragment_container,fragment);
-                fragmentTransaction.commit();
+
+                Intent intent = new Intent(getActivity(), ControlActivity.class);
+                startActivity(intent);
+
+                getDialog().dismiss();
+            }
+        });
+
+        saved_bt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                getDialog().dismiss();
             }
         });
 

@@ -14,10 +14,10 @@
     <string name="skip">Skip</string>
     <string name="start">Start</string>
     <string name="title_slide1">Connect to the car</string>
-    <string name="desc_slide1">It will start automatically when connected</string>
-    <string name="title_slide2">Buttons and\naccelerometer\ncontrol</string>
-    <string name="desc_slide2">It will  keep you updated on battery charging status through notification and home screen widget</string>
-    <string name="title_slide3">Show battery state</string>
-    <string name="desc_slide3">It will show you battery state</string>
+    <string name="desc_slide1">Drive car via bluetooth</string>
+    <string name="title_slide2">Accelerometer control</string>
+    <string name="desc_slide2">Easy control on the car</string>
+    <string name="title_slide3">Battery state</string>
+    <string name="desc_slide3">Shows up car battery state</string>
 
 </resources>
